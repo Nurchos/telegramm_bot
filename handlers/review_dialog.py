@@ -2,6 +2,8 @@ from aiogram import Router, types
 from aiogram.types import CallbackQuery
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
+from datetime import datetime
+import sqlite3
 
 review_router = Router()
 
@@ -9,8 +11,26 @@ review_router = Router()
 class BooksReview(StatesGroup):
     waiting_for_name = State()
     waiting_for_contact = State()
+    waiting_for_date = State()
     waiting_for_rate = State()
     waiting_for_extra_comments = State()
+
+
+def init_db():
+    conn = sqlite3.connect("reviews.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS reviews (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            contact TEXT,
+            visit_date DATE,
+            rate INTEGER,
+            extra_comments TEXT
+        )
+    """)
+    conn.commit()
+    conn.close()
 
 
 @review_router.callback_query(lambda call: call.data == "review:start")
@@ -30,6 +50,22 @@ async def get_name(message: types.Message, state: FSMContext):
 @review_router.message(BooksReview.waiting_for_contact)
 async def get_contact(message: types.Message, state: FSMContext):
     await state.update_data(contact=message.text)
+    await message.answer("Введите дату посещения в формате ГГГГ-ММ-ДД (или напишите 'пропустить'):")
+    await state.set_state(BooksReview.waiting_for_date)
+
+
+@review_router.message(BooksReview.waiting_for_date)
+async def get_date(message: types.Message, state: FSMContext):
+    if message.text.lower() != "пропустить":
+        try:
+            visit_date = datetime.strptime(message.text, "%Y-%m-%d").date()
+            await state.update_data(visit_date=visit_date)
+        except ValueError:
+            await message.answer("Некорректный формат даты. Используйте год-месяц-день или напишите 'пропустить'.")
+            return
+    else:
+        await state.update_data(visit_date=None)
+
     await message.answer("Поставьте нам оценку от 1 до 5:")
     await state.set_state(BooksReview.waiting_for_rate)
 
@@ -37,7 +73,7 @@ async def get_contact(message: types.Message, state: FSMContext):
 @review_router.message(BooksReview.waiting_for_rate)
 async def get_rate(message: types.Message, state: FSMContext):
     if message.text.isdigit() and 1 <= int(message.text) <= 5:
-        await state.update_data(rate=message.text)
+        await state.update_data(rate=int(message.text))
         await message.answer("Оставьте дополнительные комментарии:")
         await state.set_state(BooksReview.waiting_for_extra_comments)
     else:
@@ -53,9 +89,34 @@ async def finish_review(message: types.Message, state: FSMContext):
         f"Спасибо за ваш отзыв!\n\n"
         f"Имя: {data.get('name')}\n"
         f"Контакт: {data.get('contact')}\n"
+        f"Дата посещения: {data.get('visit_date') or 'Не указана'}\n"
         f"Оценка: {data.get('rate')}\n"
         f"Комментарий: {data.get('extra_comments')}"
     )
 
+    save_review_to_db(data)
+
     await message.answer(review_text)
     await state.clear()
+
+
+def save_review_to_db(data: dict):
+    conn = sqlite3.connect("reviews.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO reviews (name, contact, visit_date, rate, extra_comments)
+        VALUES (?, ?, ?, ?, ?)
+    """, (
+        data.get("name"),
+        data.get("contact"),
+        data.get("visit_date"),
+        data.get("rate"),
+        data.get("extra_comments")
+    ))
+
+    conn.commit()
+    conn.close()
+
+
+init_db()
