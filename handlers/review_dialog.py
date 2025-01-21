@@ -3,9 +3,11 @@ from aiogram.types import CallbackQuery
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from datetime import datetime
-import sqlite3
+from database import ReviewsDatabase  # Ensure this is the correct import
 
 review_router = Router()
+
+db = ReviewsDatabase()
 
 
 class BooksReview(StatesGroup):
@@ -14,23 +16,6 @@ class BooksReview(StatesGroup):
     waiting_for_date = State()
     waiting_for_rate = State()
     waiting_for_extra_comments = State()
-
-
-def init_db():
-    conn = sqlite3.connect("reviews.db")
-    cursor = conn.cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS reviews (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT,
-            contact TEXT,
-            visit_date DATE,
-            rate INTEGER,
-            extra_comments TEXT
-        )
-    """)
-    conn.commit()
-    conn.close()
 
 
 @review_router.callback_query(lambda call: call.data == "review:start")
@@ -94,29 +79,7 @@ async def finish_review(message: types.Message, state: FSMContext):
         f"Комментарий: {data.get('extra_comments')}"
     )
 
-    save_review_to_db(data)
+    db.save_review_to_db(data)  # Use the method to save data in DB
 
     await message.answer(review_text)
     await state.clear()
-
-
-def save_review_to_db(data: dict):
-    conn = sqlite3.connect("reviews.db")
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        INSERT INTO reviews (name, contact, visit_date, rate, extra_comments)
-        VALUES (?, ?, ?, ?, ?)
-    """, (
-        data.get("name"),
-        data.get("contact"),
-        data.get("visit_date"),
-        data.get("rate"),
-        data.get("extra_comments")
-    ))
-
-    conn.commit()
-    conn.close()
-
-
-init_db()
