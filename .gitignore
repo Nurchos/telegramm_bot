@@ -133,6 +133,11 @@ env.bak/
 venv.bak/
 .idea/
 reviews.db/
+*.db
+/logs/
+/data/*
+!/data/important.txt
+
 
 # Spyder project settings
 .spyderproject
