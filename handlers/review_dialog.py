@@ -3,11 +3,12 @@ from aiogram.types import CallbackQuery
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from datetime import datetime
-from database import ReviewsDatabase  # Ensure this is the correct import
+from database import Database
+# from config_bot import database
 
 review_router = Router()
 
-db = ReviewsDatabase()
+db = Database()
 
 
 class BooksReview(StatesGroup):
@@ -79,7 +80,7 @@ async def finish_review(message: types.Message, state: FSMContext):
         f"Комментарий: {data.get('extra_comments')}"
     )
 
-    db.save_review_to_db(data)  # Use the method to save data in DB
+    db.save_review_to_db(data)
 
     await message.answer(review_text)
     await state.clear()
