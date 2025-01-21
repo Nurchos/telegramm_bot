@@ -132,6 +132,7 @@ ENV/
 env.bak/
 venv.bak/
 .idea/
+reviews.db/
 
 # Spyder project settings
 .spyderproject
