@@ -1,4 +1,4 @@
-from aiogram import Router, types
+from aiogram import Router, F, types
 from aiogram.filters import Command
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
@@ -7,7 +7,7 @@ from database import BooksDatabase
 # from config_bot import database
 
 book_admin_router = Router()
-my_id = 1971434104
+book_admin_router.message.filter(F.from_user.id == 1971434104)
 
 db = BooksDatabase()
 
@@ -23,9 +23,6 @@ class Books(StatesGroup):
 @book_admin_router.message(Command('newbook'))
 async def new_book(message: types.Message, state: FSMContext):
     await message.answer('Введите название книги')
-    if message.from_user.id != my_id:
-        await message.answer("нет доступа")
-        return
     await state.set_state(Books.name)
 
 
