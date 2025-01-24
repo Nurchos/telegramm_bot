@@ -2,14 +2,14 @@ from aiogram import Router, F, types
 from aiogram.filters import Command
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
-from database import BooksDatabase
+from database import Database
 
 # from config_bot import database
 
 book_admin_router = Router()
 book_admin_router.message.filter(F.from_user.id == 1971434104)
 
-db = BooksDatabase()
+db = Database()
 
 
 class Books(StatesGroup):

@@ -2,14 +2,14 @@ import sqlite3
 
 
 class Database:
-    def __init__(self, db_name="reviews.db"):
+    def __init__(self, db_name="application.db"):
         self.db_name = db_name
-        self.init_db()
+        self.conn = sqlite3.connect(self.db_name)
+        self.cursor = self.conn.cursor()
+        self._init_tables()
 
-    def init_db(self):
-        conn = sqlite3.connect(self.db_name)
-        cursor = conn.cursor()
-        cursor.execute("""
+    def _init_tables(self):
+        self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS reviews (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT,
@@ -19,37 +19,6 @@ class Database:
                 extra_comments TEXT
             )
         """)
-        conn.commit()
-        conn.close()
-
-    def save_review_to_db(self, data: dict):
-        conn = sqlite3.connect(self.db_name)
-        cursor = conn.cursor()
-        cursor.execute("""
-            INSERT INTO reviews (name, contact, visit_date, rate, extra_comments)
-            VALUES (?, ?, ?, ?, ?)
-        """, (
-            data.get("name"),
-            data.get("contact"),
-            data.get("visit_date"),
-            data.get("rate"),
-            data.get("extra_comments")
-        ))
-        conn.commit()
-        conn.close()
-
-
-class BooksDatabase:
-    def __init__(self, db_name="books.db"):
-        self.db_name = db_name
-        self._connect()
-
-    def _connect(self):
-        self.conn = sqlite3.connect(self.db_name)
-        self.cursor = self.conn.cursor()
-        self._create_table()
-
-    def _create_table(self):
         self.cursor.execute("""
             CREATE TABLE IF NOT EXISTS books (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -62,12 +31,33 @@ class BooksDatabase:
         """)
         self.conn.commit()
 
+    def save_review(self, data: dict):
+        self.cursor.execute("""
+            INSERT INTO reviews (name, contact, visit_date, rate, extra_comments)
+            VALUES (?, ?, ?, ?, ?)
+        """, (
+            data.get("name"),
+            data.get("contact"),
+            data.get("visit_date"),
+            data.get("rate"),
+            data.get("extra_comments")
+        ))
+        self.conn.commit()
+
+    def get_reviews(self):
+        self.cursor.execute("SELECT * FROM reviews")
+        return self.cursor.fetchall()
+
     def save_book(self, name, year, author, genre, price):
         self.cursor.execute("""
             INSERT INTO books (name, year, author, genre, price)
             VALUES (?, ?, ?, ?, ?)
         """, (name, year, author, genre, price))
         self.conn.commit()
+
+    def get_books(self):
+        self.cursor.execute("SELECT * FROM books")
+        return self.cursor.fetchall()
 
     def close(self):
         self.conn.close()

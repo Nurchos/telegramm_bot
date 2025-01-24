@@ -4,6 +4,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from datetime import datetime
 from database import Database
+
 # from config_bot import database
 
 review_router = Router()
@@ -80,7 +81,7 @@ async def finish_review(message: types.Message, state: FSMContext):
         f"Комментарий: {data.get('extra_comments')}"
     )
 
-    db.save_review_to_db(data)
+    db.save_review(data)
 
     await message.answer(review_text)
     await state.clear()
