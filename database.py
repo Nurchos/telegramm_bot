@@ -56,8 +56,10 @@ class Database:
         self.conn.commit()
 
     def get_books(self):
-        self.cursor.execute("SELECT * FROM books")
-        return self.cursor.fetchall()
+        with sqlite3.connect(self.db_name) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM books")
+            return cursor.fetchall()
 
     def close(self):
-        self.conn.close()
+        pass

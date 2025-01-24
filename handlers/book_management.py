@@ -1,13 +1,10 @@
-from aiogram import Router, F, types
+from aiogram import Router, types
 from aiogram.filters import Command
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from database import Database
 
-# from config_bot import database
-
 book_admin_router = Router()
-book_admin_router.message.filter(F.from_user.id == 1971434104)
 
 db = Database()
 
@@ -63,7 +60,7 @@ async def process_price(message: types.Message, state: FSMContext):
 
 
 @book_admin_router.message(Books.price)
-async def process_name(message: types.Message, state: FSMContext):
+async def process_finish(message: types.Message, state: FSMContext):
     price = message.text
     if not price.isdigit():
         await message.answer("Вводите только цифры")

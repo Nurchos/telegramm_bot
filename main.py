@@ -7,6 +7,7 @@ from handlers.my_info import my_info_router
 from handlers.random_name import random_name_router
 from handlers.review_dialog import review_router
 from handlers.book_management import book_admin_router
+from handlers.show_books import show_books_router
 
 
 async def main():
@@ -15,6 +16,7 @@ async def main():
     dp.include_router(random_name_router)
     dp.include_router(review_router)
     dp.include_router(book_admin_router)
+    dp.include_router(show_books_router)
     dp.include_router(other_router)
     await dp.start_polling(bot)
 
